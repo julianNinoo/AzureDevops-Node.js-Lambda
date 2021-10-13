@@ -1,4 +1,8 @@
-exports.handler = (event, context, callback) => {
+exports.handler = async (event) => {
     // TODO implement
-    callback(null, 'Hello from Lambda via Azure Pipelines');
+    const response = {
+        statusCode: 200,
+        body: JSON.stringify('Hello from Lambda!'),
+    };
+    return response;
 };

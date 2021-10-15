@@ -5,17 +5,45 @@
 pool:
   vmImage: 'Ubuntu 16.04'
 
+#Install node.js
 steps:
 - task: NodeTool@0
   inputs:
     versionSpec: '10.x'
   displayName: 'Install Node.js'
 
+#Install dependencies node.js
 - script: |
     npm install
     npm install node-lambda -g
   displayName: 'npm install'
 
+# Static Code Analysis
+#steps:
+#- task: SonarQubePrepare@4
+# inputs:
+ #   SonarQube: '<sonarqube connection from dropdown>'
+  #  scannerMode: 'MSBuild'
+ #   projectKey: '<your project key>'
+  #  projectName: '<your project name>'
+ #   projectVersion: '<optional>'
+#- task: SonarQubeAnalyze@4  
+#- task: SonarQubePublish@4
+  #inputs:
+ #   pollingTimeoutSec: '300'
+
+#dependency scan
 - script: |
-    node-lambda deploy -a $(AWS_ACCESS_KEY) -s $(AWS_SECRET_KEY) -o $(AWS_ROLE) -r $(AWS_REGION) -n $(AWS_LAMBDA_FUNCTION_NAME) --excludeGlobs "azure-pipelines.yml"
+    npm audit --json >> vulnerabilities.json
+  displayName: 'dependency scan'
+
+# unit tests
+- script: |
+    npm i jest @types/jest ts-jest typescript -D
+    npx jest
+  displayName: 'unit tests'
+  
+#deploy
+- script: |
+    node-lambda deploy -a $(AWS_ACCESS_KEY) -s $(AWS_SECRET_KEY) -o $(AWS_ROLE) -r $(AWS_REGION) -n $(AWS_LAMBDA_FUNCTION_NAME) --excludeGlobs "azure-pipelines.yml" --excludeGlobs "package.json" --excludeGlobs "handler.test.js"
   displayName: 'Deploy to AWS'
